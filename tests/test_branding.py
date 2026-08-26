@@ -42,6 +42,10 @@ class BrandingTest(unittest.TestCase):
         self.assertIn("def _event_loop_exception_handler", source)
         self.assertIn("def _task_factory", source)
         self.assertIn("created_at=", source)
+        self.assertIn(
+            'return getattr(code, "co_qualname", code.co_name)', source
+        )
+        self.assertNotIn("code.co_qualname", source)
 
     def test_log_formatter_rebrands_internal_package(self):
         formatter = RatkoFormatter("%(name)s: %(message)s")

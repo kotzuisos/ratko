@@ -539,6 +539,10 @@ def raise_auth():
     raise InteractiveAuthRequired()
 
 
+def _code_name(code) -> str:
+    return getattr(code, "co_qualname", code.co_name)
+
+
 def _await_chain(coro, limit: int = 8) -> str:
     chain = []
     current = coro
@@ -553,7 +557,7 @@ def _await_chain(coro, limit: int = 8) -> str:
         code = getattr(current, "cr_code", None) or getattr(current, "gi_code", None)
         if code is not None:
             chain.append(
-                f"{code.co_qualname} ({code.co_filename}:{code.co_firstlineno})"
+                f"{_code_name(code)} ({code.co_filename}:{code.co_firstlineno})"
             )
             awaited = getattr(current, "cr_await", None)
             if awaited is None:
@@ -586,7 +590,7 @@ def _task_diagnostics(task) -> str:
         coro = None
 
     code = getattr(coro, "cr_code", None) or getattr(coro, "gi_code", None)
-    coro_name = code.co_qualname if code is not None else type(coro).__qualname__
+    coro_name = _code_name(code) if code is not None else type(coro).__qualname__
     state = (
         "cancelled"
         if task.cancelled()
@@ -669,7 +673,7 @@ def _task_factory(loop, coro, **kwargs):
         code = getattr(coro, "cr_code", None) or getattr(coro, "gi_code", None)
         task_name = task.get_name()
         if code and (not task_name or str(task_name).startswith("Task-")):
-            task._ratko_name = f"ratko:{code.co_qualname}"
+            task._ratko_name = f"ratko:{_code_name(code)}"
             task.set_name(task._ratko_name)
 
         origin = traceback.extract_stack(limit=5)
